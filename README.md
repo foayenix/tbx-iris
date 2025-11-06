@@ -123,6 +123,101 @@ Phase 4 has been successfully completed with full AI art generation integration:
 
 Phase 5 has been successfully completed with comprehensive history tracking and visualization:
 
+### ✅ Phase 6 - Advanced History Management (COMPLETED)
+
+Phase 6 has been successfully completed with advanced analytics and data management:
+
+#### Advanced Search System
+- **Advanced Search Service** - Full-text search with multiple criteria
+  - Search in tags, notes, body systems, insights
+  - Advanced filtering (quality range, date range, insight count)
+  - Search suggestions based on partial queries
+  - Text highlighting in results
+  - Group by multiple criteria (date, month, quality, etc.)
+- **Search Options** - Customizable search scope
+  - Tags-only search
+  - Insights-only search
+  - Combined search modes
+- **Search Results Grouping** - Organized result display
+  - Group by date, month, quality bucket
+  - Group by insight count or body system
+  - Group by tags
+
+#### Backup & Restore System
+- **Backup Service** - Complete data backup
+  - Full history backup to JSON
+  - Optional image inclusion
+  - Compression support
+  - Backup metadata (device info, timestamps)
+- **Restore Functionality** - Data recovery
+  - Merge mode (keep existing, add new)
+  - Replace mode (clear and restore)
+  - Validation checks
+  - Progress tracking
+- **Auto-Backup** - Scheduled backups
+  - Configurable interval (days)
+  - Minimum scan threshold
+  - Maximum backup retention
+  - Automatic old backup cleanup
+- **Backup Management** - File organization
+  - List available backups
+  - Backup info display (date, size, scan count)
+  - Delete old backups
+  - Share backup files
+
+#### Analytics Dashboard
+- **Overview Cards** - Key metrics at a glance
+  - Total scans count
+  - Total insights generated
+  - Average quality score
+  - Art pieces created
+- **Quality Trend Chart** - Line graph visualization
+  - Quality score over time
+  - Trend line display
+  - Data point indicators
+- **Insights Trend** - Bar chart visualization
+  - Insights count per scan
+  - Visual comparison over time
+- **Body Systems Breakdown** - Horizontal bar chart
+  - Top 5 analyzed systems
+  - Frequency counts
+  - Percentage bars
+- **Activity Heatmap** - Day of week analysis
+  - Scan distribution by weekday
+  - Visual bar chart
+  - Pattern identification
+- **Art Generation Stats** - Circular progress
+  - Percentage of scans with art
+  - Visual circular indicator
+  - Ratio display
+- **Time Range Filter** - Flexible time periods
+  - Last 7 days
+  - Last 30 days
+  - Last 90 days
+  - Last year
+  - All time
+
+#### Data Privacy & Management
+- **Local-First Architecture** - Privacy by design
+  - All data stored locally with Hive
+  - No cloud sync required
+  - User controls all data
+- **Data Export** - Complete data portability
+  - Export to JSON, CSV, or Text
+  - Include or exclude images
+  - Full metadata preservation
+- **Data Cleanup** - Storage management
+  - Selective scan deletion
+  - Batch deletion support
+  - Clear all history option
+  - Confirmation dialogs
+
+#### Wellness Trends
+- **Quality Tracking** - Monitor scan quality over time
+- **Insight Growth** - Track wellness insights accumulation
+- **System Coverage** - See which body systems are analyzed most
+- **Activity Patterns** - Identify scanning habits and patterns
+
 #### History Storage System
 - **History Storage Service** - Local persistence with Hive
   - CRUD operations for scan history
@@ -427,15 +522,15 @@ lib/
 └── main.dart               # App entry point
 ```
 
-## Next Steps - Phase 6
+## Next Steps - Phase 7
 
-Phase 6 will implement:
-- Scan history management dashboard
-- Advanced filtering and search
-- Data backup and restore
-- Cloud sync (optional)
-- Sharing capabilities
-- Analytics dashboard
+Phase 7 will implement:
+- In-app purchase system (RevenueCat)
+- Subscription management (Free/Pro tiers)
+- Pro features gating
+- Payment processing
+- Subscription analytics
+- Trial period management
 
 See [QUICK_START_GUIDE.md](./QUICK_START_GUIDE.md) for detailed implementation steps.
 
@@ -446,9 +541,9 @@ See [QUICK_START_GUIDE.md](./QUICK_START_GUIDE.md) for detailed implementation s
 - [x] **Phase 3** - Iridology Mapping (COMPLETED)
 - [x] **Phase 4** - AI Art Generation (COMPLETED)
 - [x] **Phase 5** - Enhanced Wellness UI & History (COMPLETED)
-- [ ] **Phase 6** - Advanced History Management
-- [ ] **Phase 7** - Monetization
-- [ ] **Phase 8** - Social Sharing
+- [x] **Phase 6** - Advanced History Management (COMPLETED)
+- [ ] **Phase 7** - Monetization & Subscriptions
+- [ ] **Phase 8** - Social Sharing & Community
 
 ## Key Features
 
@@ -515,10 +610,10 @@ For technical questions:
 - ✅ Phase 3: Iridology Mapping
 - ✅ Phase 4: AI Art Integration
 - ✅ Phase 5: Enhanced Wellness UI & History
+- ✅ Phase 6: Advanced History Management
 
 ### Q2 2025
-- 🔄 Phase 6: Advanced History Management
-- 🔄 Phase 7: Monetization
+- 🔄 Phase 7: Monetization & Subscriptions
 
 ### Q3 2025
 - 🔄 Phase 8: Social Features
@@ -531,7 +626,20 @@ For technical questions:
 
 ## Version History
 
-### v0.5.0 (Current) - Phase 5 Complete
+### v0.6.0 (Current) - Phase 6 Complete
+- ✅ Advanced search service with full-text search
+- ✅ Backup and restore functionality
+- ✅ Analytics dashboard with charts
+- ✅ Quality trend visualization (line chart)
+- ✅ Insights trend visualization (bar chart)
+- ✅ Body systems breakdown analysis
+- ✅ Activity heatmap by weekday
+- ✅ Art generation statistics
+- ✅ Time range filtering (week, month, 90 days, year, all)
+- ✅ Search suggestions and text highlighting
+- ✅ Auto-backup with configurable settings
+
+### v0.5.0 - Phase 5 Complete
 - ✅ Interactive iris zone map with tap navigation
 - ✅ Zone detail screen with comprehensive analysis
 - ✅ History storage service with Hive
@@ -588,4 +696,4 @@ For technical questions:
 
 **Built with ❤️ using Flutter**
 
-*Last Updated: November 6, 2025 - Phase 5 Complete*
+*Last Updated: November 6, 2025 - Phase 6 Complete*
