@@ -4,11 +4,14 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../../../../core/constants/wellness_disclaimer.dart';
+import '../../../../core/constants/iridology_zones.dart';
 import '../../domain/entities/iridology_analysis.dart';
 import '../../../art_generation/presentation/screens/art_style_selector_screen.dart';
+import '../widgets/interactive_iris_map.dart';
+import 'zone_detail_screen.dart';
 
 /// Screen displaying wellness insights
-class WellnessInsightsScreen extends StatelessWidget {
+class WellnessInsightsScreen extends StatefulWidget {
   final IridologyAnalysis analysis;
   final Uint8List? irisImageBytes;
 
@@ -19,11 +22,23 @@ class WellnessInsightsScreen extends StatelessWidget {
   });
 
   @override
+  State<WellnessInsightsScreen> createState() => _WellnessInsightsScreenState();
+}
+
+class _WellnessInsightsScreenState extends State<WellnessInsightsScreen> {
+  bool _showMap = true;
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Wellness Insights'),
         actions: [
+          IconButton(
+            icon: Icon(_showMap ? Icons.list : Icons.map),
+            onPressed: () => setState(() => _showMap = !_showMap),
+            tooltip: _showMap ? 'Show List' : 'Show Map',
+          ),
           IconButton(
             icon: const Icon(Icons.info_outline),
             onPressed: () => _showDisclaimerDialog(context),
@@ -37,24 +52,61 @@ class WellnessInsightsScreen extends StatelessWidget {
           _DisclaimerBanner(),
 
           // Analysis summary
-          _AnalysisSummary(analysis: analysis),
+          _AnalysisSummary(analysis: widget.analysis),
+
+          // Interactive Iris Map (if image available and map mode)
+          if (widget.irisImageBytes != null && _showMap) ...[
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Interactive Iris Map',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Tap zones to view detailed analysis',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  InteractiveIrisMap(
+                    irisImage: widget.irisImageBytes!,
+                    analysis: widget.analysis,
+                    isLeftEye: widget.analysis.isLeftEye,
+                    onZoneTap: _onZoneTap,
+                    showLabels: true,
+                    showHeatmap: false,
+                  ),
+                ],
+              ),
+            ),
+          ],
 
           // Art generation CTA if iris image is available
-          if (irisImageBytes != null) _ArtGenerationCTA(onTap: () => _navigateToArtGeneration(context)),
+          if (widget.irisImageBytes != null && !_showMap)
+            _ArtGenerationCTA(onTap: () => _navigateToArtGeneration(context)),
 
           // Insights list
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.all(16),
-              itemCount: analysis.insights.length,
+              itemCount: widget.analysis.insights.length,
               itemBuilder: (context, index) {
-                return _InsightCard(insight: analysis.insights[index]);
+                return _InsightCard(insight: widget.analysis.insights[index]);
               },
             ),
           ),
         ],
       ),
-      floatingActionButton: irisImageBytes != null
+      floatingActionButton: widget.irisImageBytes != null
           ? FloatingActionButton.extended(
               onPressed: () => _navigateToArtGeneration(context),
               icon: const Icon(Icons.auto_awesome),
@@ -64,14 +116,30 @@ class WellnessInsightsScreen extends StatelessWidget {
     );
   }
 
+  void _onZoneTap(IridologyZone zone, ZoneAnalysis? analysis) {
+    if (widget.irisImageBytes == null) return;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ZoneDetailScreen(
+          zone: zone,
+          analysis: analysis,
+          irisImage: widget.irisImageBytes!,
+          isLeftEye: widget.analysis.isLeftEye,
+        ),
+      ),
+    );
+  }
+
   void _navigateToArtGeneration(BuildContext context) {
-    if (irisImageBytes == null) return;
+    if (widget.irisImageBytes == null) return;
 
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => ArtStyleSelectorScreen(
-          irisImage: irisImageBytes!,
+          irisImage: widget.irisImageBytes!,
           isPro: false, // TODO: Load from user subscription status
         ),
       ),
