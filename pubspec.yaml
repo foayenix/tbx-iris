@@ -1,0 +1,60 @@
+name: iris_app
+description: Iris wellness and AI art generation app - Transform your iris into stunning digital art while exploring wellness insights
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.5.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State Management
+  flutter_riverpod: ^2.5.1
+
+  # Camera & Images
+  camera: ^0.11.0+2
+  image_picker: ^1.0.7
+  image: ^4.1.7
+
+  # ML & Computer Vision
+  # Note: face_detection_tflite package will be added when available
+  # For now we'll implement basic face detection
+
+  # HTTP & API
+  dio: ^5.4.3
+
+  # Local Storage
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  flutter_secure_storage: ^9.0.0
+  shared_preferences: ^2.2.2
+  path_provider: ^2.1.2
+
+  # UI/UX
+  lottie: ^3.1.0
+  cached_network_image: ^3.3.1
+
+  # Utilities
+  permission_handler: ^11.3.0
+  share_plus: ^7.2.2
+
+  # Firebase (optional - for analytics)
+  # firebase_core: ^2.24.0
+  # firebase_analytics: ^10.7.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+  hive_generator: ^2.0.1
+  build_runner: ^2.4.8
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/styles/
+    - assets/animations/
