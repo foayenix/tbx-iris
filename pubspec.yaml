@@ -39,6 +39,7 @@ dependencies:
   # Utilities
   permission_handler: ^11.3.0
   share_plus: ^7.2.2
+  uuid: ^4.3.3
 
   # Firebase (optional - for analytics)
   # firebase_core: ^2.24.0

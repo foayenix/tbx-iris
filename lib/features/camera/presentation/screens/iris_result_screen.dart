@@ -3,6 +3,8 @@
 
 import 'package:flutter/material.dart';
 import '../../domain/entities/iris_capture_result.dart';
+import '../../../iris_analysis/data/services/iridology_mapping_service.dart';
+import '../../../iris_analysis/presentation/screens/wellness_insights_screen.dart';
 
 /// Screen to display iris capture results
 class IrisResultScreen extends StatelessWidget {
@@ -116,18 +118,62 @@ class IrisResultScreen extends StatelessWidget {
     );
   }
 
-  void _acceptAndContinue(BuildContext context) {
-    // TODO: Navigate to analysis/art generation screen
-    // For now, just show a message
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Iris capture successful! Analysis feature coming in Phase 3.'),
-        duration: Duration(seconds: 2),
+  Future<void> _acceptAndContinue(BuildContext context) async {
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: Card(
+          child: Padding(
+            padding: EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text('Analyzing iris patterns...'),
+              ],
+            ),
+          ),
+        ),
       ),
     );
 
-    // Navigate back to home
-    Navigator.popUntil(context, (route) => route.isFirst);
+    try {
+      // Perform iridology analysis on left iris
+      final mappingService = IridologyMappingService();
+      final analysis = await mappingService.analyzeIris(
+        irisImageBytes: result.leftIrisImage!,
+        isLeftEye: true,
+      );
+
+      if (!context.mounted) return;
+
+      // Close loading dialog
+      Navigator.pop(context);
+
+      // Navigate to wellness insights screen
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => WellnessInsightsScreen(analysis: analysis),
+        ),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+
+      // Close loading dialog
+      Navigator.pop(context);
+
+      // Show error
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Analysis failed: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 }
 
