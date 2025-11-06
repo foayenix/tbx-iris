@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../domain/entities/iris_capture_result.dart';
 import '../../../iris_analysis/data/services/iridology_mapping_service.dart';
 import '../../../iris_analysis/presentation/screens/wellness_insights_screen.dart';
+import '../../../art_generation/presentation/screens/art_style_selector_screen.dart';
 
 /// Screen to display iris capture results
 class IrisResultScreen extends StatelessWidget {
@@ -104,10 +105,24 @@ class IrisResultScreen extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
+                onPressed: () => _navigateToArtGeneration(context),
+                icon: const Icon(Icons.auto_awesome),
+                label: const Text('Create Art'),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            SizedBox(
+              width: double.infinity,
+              child: TextButton.icon(
                 onPressed: () => Navigator.pop(context),
                 icon: const Icon(Icons.camera_alt),
                 label: const Text('Retake Photo'),
-                style: OutlinedButton.styleFrom(
+                style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
               ),
@@ -157,7 +172,10 @@ class IrisResultScreen extends StatelessWidget {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => WellnessInsightsScreen(analysis: analysis),
+          builder: (_) => WellnessInsightsScreen(
+            analysis: analysis,
+            irisImageBytes: result.leftIrisImage,
+          ),
         ),
       );
     } catch (e) {
@@ -174,6 +192,28 @@ class IrisResultScreen extends StatelessWidget {
         ),
       );
     }
+  }
+
+  void _navigateToArtGeneration(BuildContext context) {
+    if (result.leftIrisImage == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No iris image available'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ArtStyleSelectorScreen(
+          irisImage: result.leftIrisImage!,
+          isPro: false, // TODO: Load from user subscription status
+        ),
+      ),
+    );
   }
 }
 

@@ -1,17 +1,21 @@
 // lib/features/iris_analysis/presentation/screens/wellness_insights_screen.dart
 // Screen displaying wellness insights from iridology analysis
 
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../../../../core/constants/wellness_disclaimer.dart';
 import '../../domain/entities/iridology_analysis.dart';
+import '../../../art_generation/presentation/screens/art_style_selector_screen.dart';
 
 /// Screen displaying wellness insights
 class WellnessInsightsScreen extends StatelessWidget {
   final IridologyAnalysis analysis;
+  final Uint8List? irisImageBytes;
 
   const WellnessInsightsScreen({
     super.key,
     required this.analysis,
+    this.irisImageBytes,
   });
 
   @override
@@ -35,6 +39,9 @@ class WellnessInsightsScreen extends StatelessWidget {
           // Analysis summary
           _AnalysisSummary(analysis: analysis),
 
+          // Art generation CTA if iris image is available
+          if (irisImageBytes != null) _ArtGenerationCTA(onTap: () => _navigateToArtGeneration(context)),
+
           // Insights list
           Expanded(
             child: ListView.builder(
@@ -46,6 +53,27 @@ class WellnessInsightsScreen extends StatelessWidget {
             ),
           ),
         ],
+      ),
+      floatingActionButton: irisImageBytes != null
+          ? FloatingActionButton.extended(
+              onPressed: () => _navigateToArtGeneration(context),
+              icon: const Icon(Icons.auto_awesome),
+              label: const Text('Create Art'),
+            )
+          : null,
+    );
+  }
+
+  void _navigateToArtGeneration(BuildContext context) {
+    if (irisImageBytes == null) return;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ArtStyleSelectorScreen(
+          irisImage: irisImageBytes!,
+          isPro: false, // TODO: Load from user subscription status
+        ),
       ),
     );
   }
@@ -319,5 +347,80 @@ class _InsightCard extends StatelessWidget {
       case InsightCategory.environmental:
         return Colors.teal;
     }
+  }
+}
+
+class _ArtGenerationCTA extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _ArtGenerationCTA({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Theme.of(context).colorScheme.primary,
+                Theme.of(context).colorScheme.secondary,
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.auto_awesome,
+                  color: Colors.white,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Transform Your Iris',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Create stunning AI art from your iris',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.9),
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(
+                Icons.arrow_forward,
+                color: Colors.white,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
