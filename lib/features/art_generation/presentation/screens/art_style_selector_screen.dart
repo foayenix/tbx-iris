@@ -3,29 +3,32 @@
 
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/constants/art_styles.dart';
+import '../../../../core/utils/feature_gate.dart';
+import '../../../subscription/presentation/providers/subscription_provider.dart';
 import '../../domain/entities/art_generation_result.dart';
 import '../../data/services/stability_ai_service.dart';
 import 'art_result_screen.dart';
 
 /// Screen for selecting an art style
-class ArtStyleSelectorScreen extends StatefulWidget {
+class ArtStyleSelectorScreen extends ConsumerStatefulWidget {
   final Uint8List irisImage;
-  final bool isPro;
 
   const ArtStyleSelectorScreen({
     super.key,
     required this.irisImage,
-    this.isPro = false,
   });
 
   @override
-  State<ArtStyleSelectorScreen> createState() => _ArtStyleSelectorScreenState();
+  ConsumerState<ArtStyleSelectorScreen> createState() =>
+      _ArtStyleSelectorScreenState();
 }
 
-class _ArtStyleSelectorScreenState extends State<ArtStyleSelectorScreen> {
+class _ArtStyleSelectorScreenState
+    extends ConsumerState<ArtStyleSelectorScreen> {
   final _uuid = const Uuid();
   ArtStyle? _selectedStyle;
 
@@ -33,12 +36,13 @@ class _ArtStyleSelectorScreenState extends State<ArtStyleSelectorScreen> {
   Widget build(BuildContext context) {
     final freeStyles = ArtStyles.allStyles.where((s) => !s.isPro).toList();
     final proStyles = ArtStyles.allStyles.where((s) => s.isPro).toList();
+    final isPro = FeatureGate.isPro(ref);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Choose Art Style'),
         actions: [
-          if (!widget.isPro)
+          if (!isPro)
             TextButton.icon(
               onPressed: _showProUpgradeDialog,
               icon: const Icon(Icons.star, color: Colors.amber),
@@ -173,8 +177,8 @@ class _ArtStyleSelectorScreenState extends State<ArtStyleSelectorScreen> {
                 return _StyleCard(
                   style: proStyles[index],
                   isSelected: _selectedStyle?.id == proStyles[index].id,
-                  isLocked: !widget.isPro,
-                  onTap: () => widget.isPro
+                  isLocked: !isPro,
+                  onTap: () => isPro
                       ? _selectStyle(proStyles[index])
                       : _showProUpgradeDialog(),
                 );
@@ -214,6 +218,8 @@ class _ArtStyleSelectorScreenState extends State<ArtStyleSelectorScreen> {
   Future<void> _generateArt() async {
     if (_selectedStyle == null) return;
 
+    final isPro = FeatureGate.isPro(ref);
+
     // Show loading dialog
     showDialog(
       context: context,
@@ -223,7 +229,7 @@ class _ArtStyleSelectorScreenState extends State<ArtStyleSelectorScreen> {
 
     try {
       // Create art generation request
-      final request = widget.isPro
+      final request = isPro
           ? ArtGenerationRequest.proQuality(
               id: _uuid.v4(),
               irisImage: widget.irisImage,
@@ -270,43 +276,9 @@ class _ArtStyleSelectorScreenState extends State<ArtStyleSelectorScreen> {
   }
 
   void _showProUpgradeDialog() {
-    showDialog(
+    FeatureGate.showProDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.star, color: Colors.amber),
-            SizedBox(width: 8),
-            Text('Upgrade to Pro'),
-          ],
-        ),
-        content: const Text(
-          'Unlock all 12 premium art styles, 4K exports, and unlimited generations with Iris Pro!\n\n'
-          '• 8 exclusive pro styles\n'
-          '• 4K high-resolution exports\n'
-          '• No watermarks\n'
-          '• Unlimited scan history\n'
-          '• Priority support',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Maybe Later'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              // TODO: Navigate to subscription screen
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Subscription screen coming soon!'),
-                ),
-              );
-            },
-            child: const Text('Upgrade Now'),
-          ),
-        ],
-      ),
+      feature: ProFeature.proArtStyles,
     );
   }
 

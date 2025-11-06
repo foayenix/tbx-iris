@@ -2,19 +2,22 @@
 // Screen displaying scan history in chronological timeline
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/feature_gate.dart';
 import '../../domain/entities/scan_history_entry.dart';
 import '../../data/services/history_storage_service.dart';
 
 /// Screen showing historical scan timeline
-class HistoryTimelineScreen extends StatefulWidget {
+class HistoryTimelineScreen extends ConsumerStatefulWidget {
   const HistoryTimelineScreen({super.key});
 
   @override
-  State<HistoryTimelineScreen> createState() => _HistoryTimelineScreenState();
+  ConsumerState<HistoryTimelineScreen> createState() =>
+      _HistoryTimelineScreenState();
 }
 
-class _HistoryTimelineScreenState extends State<HistoryTimelineScreen> {
+class _HistoryTimelineScreenState extends ConsumerState<HistoryTimelineScreen> {
   final _historyService = HistoryStorageService();
   List<ScanHistoryEntry> _scans = [];
   HistoryStatistics? _statistics;
@@ -48,10 +51,29 @@ class _HistoryTimelineScreenState extends State<HistoryTimelineScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isPro = FeatureGate.isPro(ref);
+    final hasUnlimitedHistory =
+        FeatureGate.isFeatureUnlocked(ref, ProFeature.unlimitedHistory);
+
+    // Limit free users to 10 scans
+    final displayScans = (!isPro && _scans.length > FeatureGate.maxFreeHistoryScans)
+        ? _scans.take(FeatureGate.maxFreeHistoryScans).toList()
+        : _scans;
+    final hiddenCount = _scans.length - displayScans.length;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Scan History'),
         actions: [
+          if (!isPro)
+            TextButton.icon(
+              onPressed: () => _showUpgradeDialog(),
+              icon: const Icon(Icons.star, color: Colors.amber, size: 20),
+              label: const Text('Go Pro'),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.amber,
+              ),
+            ),
           IconButton(
             icon: const Icon(Icons.filter_list),
             onPressed: _showSortOptions,
@@ -74,19 +96,23 @@ class _HistoryTimelineScreenState extends State<HistoryTimelineScreen> {
                     if (_statistics != null)
                       _StatisticsSummary(statistics: _statistics!),
 
+                    // Free tier limitation banner
+                    if (!hasUnlimitedHistory && hiddenCount > 0)
+                      _UpgradeBanner(hiddenCount: hiddenCount),
+
                     // Timeline
                     Expanded(
                       child: RefreshIndicator(
                         onRefresh: _loadHistory,
                         child: ListView.builder(
                           padding: const EdgeInsets.all(16),
-                          itemCount: _scans.length,
+                          itemCount: displayScans.length,
                           itemBuilder: (context, index) {
-                            final scan = _scans[index];
+                            final scan = displayScans[index];
                             final showDateHeader = index == 0 ||
                                 !_isSameDay(
                                   scan.timestamp,
-                                  _scans[index - 1].timestamp,
+                                  displayScans[index - 1].timestamp,
                                 );
 
                             return Column(
@@ -220,6 +246,13 @@ class _HistoryTimelineScreenState extends State<HistoryTimelineScreen> {
         content: Text(message),
         backgroundColor: Colors.red,
       ),
+    );
+  }
+
+  void _showUpgradeDialog() {
+    FeatureGate.showProDialog(
+      context: context,
+      feature: ProFeature.unlimitedHistory,
     );
   }
 
@@ -599,6 +632,65 @@ class _SortOption extends StatelessWidget {
       trailing: isSelected ? const Icon(Icons.check) : null,
       selected: isSelected,
       onTap: () => onSelected(value),
+    );
+  }
+}
+
+/// Banner showing upgrade prompt for free users
+class _UpgradeBanner extends StatelessWidget {
+  final int hiddenCount;
+
+  const _UpgradeBanner({required this.hiddenCount});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.amber.shade100, Colors.orange.shade100],
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.amber.shade300),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.amber,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(Icons.star, color: Colors.white, size: 24),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Unlock Full History',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'You have $hiddenCount older scan${hiddenCount == 1 ? '' : 's'} hidden. Upgrade to Pro to view unlimited scan history!',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.grey.shade800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          const Icon(Icons.arrow_forward, color: Colors.amber),
+        ],
+      ),
     );
   }
 }

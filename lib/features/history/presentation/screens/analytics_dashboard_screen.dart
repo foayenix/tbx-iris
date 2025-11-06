@@ -2,21 +2,24 @@
 // Analytics dashboard showing wellness trends and statistics
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:math' as math;
 
+import '../../../../core/utils/feature_gate.dart';
 import '../../domain/entities/scan_history_entry.dart';
 import '../../data/services/history_storage_service.dart';
 
 /// Analytics dashboard screen
-class AnalyticsDashboardScreen extends StatefulWidget {
+class AnalyticsDashboardScreen extends ConsumerStatefulWidget {
   const AnalyticsDashboardScreen({super.key});
 
   @override
-  State<AnalyticsDashboardScreen> createState() =>
+  ConsumerState<AnalyticsDashboardScreen> createState() =>
       _AnalyticsDashboardScreenState();
 }
 
-class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
+class _AnalyticsDashboardScreenState
+    extends ConsumerState<AnalyticsDashboardScreen> {
   final _historyService = HistoryStorageService();
   List<ScanHistoryEntry> _scans = [];
   HistoryStatistics? _statistics;
@@ -50,54 +53,72 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final hasAdvancedAnalytics =
+        FeatureGate.isFeatureUnlocked(ref, ProFeature.advancedAnalytics);
+    final isPro = FeatureGate.isPro(ref);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Analytics Dashboard'),
         actions: [
-          PopupMenuButton<TimeRange>(
-            icon: const Icon(Icons.calendar_today),
-            onSelected: (range) => setState(() => _timeRange = range),
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: TimeRange.week,
-                child: Text('Last 7 Days'),
+          if (!isPro)
+            TextButton.icon(
+              onPressed: _showUpgradeDialog,
+              icon: const Icon(Icons.star, color: Colors.amber, size: 20),
+              label: const Text('Go Pro'),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.amber,
               ),
-              const PopupMenuItem(
-                value: TimeRange.month,
-                child: Text('Last 30 Days'),
-              ),
-              const PopupMenuItem(
-                value: TimeRange.threeMonths,
-                child: Text('Last 90 Days'),
-              ),
-              const PopupMenuItem(
-                value: TimeRange.year,
-                child: Text('Last Year'),
-              ),
-              const PopupMenuItem(
-                value: TimeRange.all,
-                child: Text('All Time'),
-              ),
-            ],
-          ),
+            ),
+          if (hasAdvancedAnalytics)
+            PopupMenuButton<TimeRange>(
+              icon: const Icon(Icons.calendar_today),
+              onSelected: (range) => setState(() => _timeRange = range),
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: TimeRange.week,
+                  child: Text('Last 7 Days'),
+                ),
+                const PopupMenuItem(
+                  value: TimeRange.month,
+                  child: Text('Last 30 Days'),
+                ),
+                const PopupMenuItem(
+                  value: TimeRange.threeMonths,
+                  child: Text('Last 90 Days'),
+                ),
+                const PopupMenuItem(
+                  value: TimeRange.year,
+                  child: Text('Last Year'),
+                ),
+                const PopupMenuItem(
+                  value: TimeRange.all,
+                  child: Text('All Time'),
+                ),
+              ],
+            ),
         ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _scans.isEmpty
               ? _EmptyAnalyticsView()
-              : RefreshIndicator(
-                  onRefresh: _loadData,
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Overview cards
-                        _OverviewSection(
-                          statistics: _statistics!,
-                          scans: _getScansInTimeRange(),
-                        ),
+              : !hasAdvancedAnalytics
+                  ? _LockedAnalyticsView(
+                      onUpgrade: _showUpgradeDialog,
+                    )
+                  : RefreshIndicator(
+                      onRefresh: _loadData,
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Overview cards
+                            _OverviewSection(
+                              statistics: _statistics!,
+                              scans: _getScansInTimeRange(),
+                            ),
 
                         const SizedBox(height: 24),
 
@@ -170,6 +191,13 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
         content: Text(message),
         backgroundColor: Colors.red,
       ),
+    );
+  }
+
+  void _showUpgradeDialog() {
+    FeatureGate.showProDialog(
+      context: context,
+      feature: ProFeature.advancedAnalytics,
     );
   }
 
@@ -837,6 +865,173 @@ class _BarChartPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_BarChartPainter oldDelegate) => false;
+}
+
+/// View shown when analytics is locked for free users
+class _LockedAnalyticsView extends StatelessWidget {
+  final VoidCallback onUpgrade;
+
+  const _LockedAnalyticsView({required this.onUpgrade});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.analytics,
+                size: 80,
+                color: Colors.grey.shade400,
+              ),
+            ),
+            const SizedBox(height: 32),
+            const Text(
+              'Advanced Analytics',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Track your wellness journey with detailed insights and trends over time.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey.shade600,
+              ),
+            ),
+            const SizedBox(height: 32),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.amber.shade50,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.amber.shade200),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.amber,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.star,
+                          color: Colors.white,
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Text(
+                          'Pro Feature',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  _FeatureItem(
+                    icon: Icons.trending_up,
+                    text: 'Quality trends over time',
+                  ),
+                  const SizedBox(height: 12),
+                  _FeatureItem(
+                    icon: Icons.bar_chart,
+                    text: 'Insights frequency analysis',
+                  ),
+                  const SizedBox(height: 12),
+                  _FeatureItem(
+                    icon: Icons.pie_chart,
+                    text: 'Body systems breakdown',
+                  ),
+                  const SizedBox(height: 12),
+                  _FeatureItem(
+                    icon: Icons.calendar_today,
+                    text: 'Activity heatmap by day',
+                  ),
+                  const SizedBox(height: 12),
+                  _FeatureItem(
+                    icon: Icons.filter_alt,
+                    text: 'Custom time range filtering',
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 32),
+            ElevatedButton.icon(
+              onPressed: onUpgrade,
+              icon: const Icon(Icons.star),
+              label: const Text('Upgrade to Pro'),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
+                textStyle: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Start your 7-day free trial today',
+              style: TextStyle(
+                fontSize: 13,
+                color: Colors.grey.shade600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Feature item for locked view
+class _FeatureItem extends StatelessWidget {
+  final IconData icon;
+  final String text;
+
+  const _FeatureItem({
+    required this.icon,
+    required this.text,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: Colors.amber.shade700),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            text,
+            style: const TextStyle(fontSize: 15),
+          ),
+        ),
+        Icon(Icons.check_circle, size: 18, color: Colors.green.shade600),
+      ],
+    );
+  }
 }
 
 enum TimeRange {

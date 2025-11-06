@@ -17,6 +17,21 @@ class ExportService {
   static const String formatCsv = 'csv';
   static const String formatText = 'txt';
 
+  /// Get available export formats based on subscription status
+  /// Free users: JSON only
+  /// Pro users: JSON, CSV, Text
+  static List<String> getAvailableFormats({required bool isPro}) {
+    if (isPro) {
+      return [formatJson, formatCsv, formatText];
+    }
+    return [formatJson]; // Free users only get JSON
+  }
+
+  /// Check if a format is available for the current user
+  static bool isFormatAvailable(String format, {required bool isPro}) {
+    return getAvailableFormats(isPro: isPro).contains(format);
+  }
+
   /// Export a single scan to JSON
   Future<String> exportScanToJson(ScanHistoryEntry scan) async {
     final data = {
