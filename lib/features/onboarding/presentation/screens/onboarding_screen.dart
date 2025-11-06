@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/constants/wellness_disclaimer.dart';
-import '../../../camera/presentation/screens/iris_camera_screen.dart';
+import '../../../camera/presentation/screens/iris_camera_screen_v2.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -309,7 +309,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (_) => const IrisCameraScreen(),
+          builder: (_) => const IrisCameraScreenV2(),
         ),
       );
     }

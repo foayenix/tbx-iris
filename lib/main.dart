@@ -8,7 +8,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'features/onboarding/presentation/screens/onboarding_screen.dart';
-import 'features/camera/presentation/screens/iris_camera_screen.dart';
+import 'features/camera/presentation/screens/iris_camera_screen_v2.dart';
 import 'core/theme/app_theme.dart';
 
 void main() async {
@@ -70,12 +70,12 @@ class IrisApp extends StatelessWidget {
       // Initial route
       home: showOnboarding
           ? const OnboardingScreen()
-          : const IrisCameraScreen(),
+          : const IrisCameraScreenV2(),
 
       // Routes
       routes: {
         '/onboarding': (context) => const OnboardingScreen(),
-        '/camera': (context) => const IrisCameraScreen(),
+        '/camera': (context) => const IrisCameraScreenV2(),
       },
     );
   }
